@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <!--include libraries(jQuery)-->
+    <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
+</head>
+
+<body>
+<h1>[(${board.title})]</h1>
+<div>작성자: <b>[(${board.user.nickName})]</b></div>
+<th:block th:if="${loginUser.id} == ${board.user.id}">
+    <form th:action="@{/board/delete}" method="post">
+        <input type="hidden" name="id" th:value="${board.id}">
+        <input type="hidden" name="content" th:value="${board.content}">
+        <input type="submit" value="삭제 하기" style="float: right;">
+    </form>
+    <form th:action="@{/board/update/form}" method="post">
+        <input type="hidden" name="id" th:value="${board.id}">
+        <input type="hidden" name="title" th:value="${board.title}">
+        <input type="hidden" name="content" th:value="${board.content}">
+        <input type="hidden" name="thumbnail" th:value="${board.thumbnail}">
+        <input type="submit" value="수정 하기" style="float: right;">
+    </form>
+</th:block>
+<br/>
+<div class="text-dark mb-0">[(${board.content})]</div>
+<hr/>
+<h2>댓글</h2>
+<form id="commentForm" th:action="@{/comment/create}" method="post">
+    <input type="hidden" name="boardId" th:value="${board.id}">
+    <input type="hidden" name="userId" th:value="${loginUser.id}">
+    <input type="hidden" name="depth" th:value="0">
+    <div>
+        <textarea class="comment" name="content" placeholder="댓글을 작성하세요" rows="2" cols="100"></textarea>
+        <span class="comment_cnt">(0 / 50)</span>
+        <input type="submit" value="댓글 작성">
+    </div>
+</form>
+<hr/>
+
+<div>
+    <span>[(${#lists.size(board.commentList)})]개의 댓글</span>
+    <th:block th:if="${#lists.size(board.commentList)} != 0">
+        <div th:each="comment : ${board.commentList}" style="background-color: lightgray">
+            <!-- 부모 댓글일 때만 출력 로직 들어감(자식 댓글은 부모 로직 시 자동 출력 됨)-->
+            <th:block th:if="${comment.depth}==0">
+                <!-- 댓글 -->
+                <label>
+                    <!-- 삭제 버튼(작성자만 표시) -->
+                    <th:block th:if="${loginUser.id} == ${comment.user.id}">
+                        <form th:action="@{/comment/delete}" method="post">
+                            <input type="hidden" name="id" th:value="${comment.id}">
+                            <input type="hidden" name="boardId" th:value="${board.id}">
+                            <input type="submit" value="삭제" style="float: right;">
+                        </form>
+                    </th:block>
+
+                    <!-- 내용 -->
+                    <p th:text="${comment.user.nickName}"></p>
+                    <p th:text="${comment.content}"></p>
+
+                    <!-- 답글 달기 버튼 -->
+                    <button class="replyButton" onclick="showReplyForm(this)">답글 달기</button>
+                    <div class="replyForm" style="display: none">
+                        <form th:action="@{/comment/create}" method="post">
+                            <input type="hidden" name="boardId" th:value="${board.id}">
+                            <input type="hidden" name="userId" th:value="${loginUser.id}">
+                            <input type="hidden" name="depth" th:value="1">
+                            <input type="hidden" name="parentId" th:value="${comment.id}">
+                            <div>
+                                    <textarea class="comment" name="content" placeholder="댓글을 작성하세요" rows="2"
+                                              cols="100"></textarea>
+                                <span class="comment_cnt">(0 / 50)</span>
+                                <input type="submit" value="댓글 작성">
+                            </div>
+                        </form>
+                    </div>
+                </label>
+
+                <!-- 답글 리스트 -->
+                <ul th:each="child : ${comment.children}">
+                    <li>
+                        <th:block th:if="${loginUser.id} == ${child.user.id}">
+                            <form th:action="@{/comment/delete}" method="post">
+                                <input type="hidden" name="id" th:value="${child.id}">
+                                <input type="hidden" name="boardId" th:value="${board.id}">
+                                <input type="submit" value="삭제" style="float: right;">
+                            </form>
+                        </th:block>
+                        <p th:text="${child.user.nickName}"></p>
+                        <p th:text="${child.content}"></p>
+                    </li>
+                </ul>
+            </th:block>
+        </div>
+    </th:block>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+        $('.comment').on('keyup', function () {
+            var commentCnt = $(this).siblings('.comment_cnt');
+            commentCnt.html("(" + $(this).val().length + " / 50)");
+
+            if ($(this).val().length > 50) {
+                $(this).val($(this).val().substring(0, 50));
+                commentCnt.html("(50 / 50)");
+            }
+        });
+    });
+
+    function showReplyForm(button) {
+        var replyForm = button.nextElementSibling
+
+        if (replyForm.style.display === "none") {
+            replyForm.style.display = "block";
+            replyButton.textContent = "숨기기";
+        } else {
+            replyForm.style.display = "none";
+            replyButton.textContent = "답글 달기";
+        }
+    }
+</script>
+</body>
+</html>

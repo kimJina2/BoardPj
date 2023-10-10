@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>게시글 보기</h1>
+<div class="search-box">
+    <form action method="GET">
+        <div class="mt-5 search-bar input-group mb-3">
+            <i class="fas fa-search"></i>
+            <input type="text" class="form-control rounded-pill" placeholder="검색할 내용">
+        </div>
+    </form>
+</div>
+<div class="list-box">
+    <a href="/board/list">전체</a> <a href="/board/gerneral">새싹회원</a> <a href="/board/vip">우수회원</a>
+    <br />
+    <table border="2">
+        <thead>
+        <tr>
+            <th>번호</th>
+            <th>사용자 닉네임</th>
+            <th>제목</th>
+            <th>내용</th>
+            <th>썸내일</th>
+            <th>등록일</th>
+        </tr>
+        </thead>
+        <tbody>
+            <tr th:each="boards : ${boards}">
+                <th th:utext="${boards.id}">번호</th>
+                <th th:utext="${boards.user.nickName}">사용자 닉네임</th>
+                <th th:utext="${boards.title}">제목</th>
+                <th th:utext="${boards.content}">내용</th>
+                <th th:utext="${boards.thumbnail}">썸내일</th>
+                <th th:utext="${boards.createdAt}">등록일</th>
+            </tr>
+        </tbody>
+        <!--굳이 태그로 감쌀 필요 없는 부분을 타임리프 문법으로 사용할 때 사용-->
+        <th:block th:each="page:${#numbers.sequence(startPage, endPage)}">
+            <a th:if="${page != nowPage}" th:href="@{/board/list(page=${page -1})}" th:text="${page}"></a>
+            <strong th:if="${page == nowPage}" th:text="${page}" style="color:red"></strong>
+        </th:block>
+    </table>
+</div>
+
+</body>
+</html>
